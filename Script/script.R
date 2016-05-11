@@ -9,6 +9,25 @@ entry = as.POSIXct(df_periodico$entry, format = "%Y-%m-%d %H:%M:%S")
 exit = as.POSIXct(df_periodico$exit, format = "%Y-%m-%d %H:%M:%S")
 #Substract time exit minus entry
 diff = difftime(exit, entry, units = "secs")
-#Now we should find transactions which average will les < 20 secs
+#Now we split articles into journal and split items individually
 df_periodico$articles = as.character(df_periodico$articles)
-strsplit(x = df_periodico$articles, split = "{", )
+split = substring(df_periodico$articles, 2)
+split = strsplit(x = split, split = ",|}")
+#Now we recognize a bot if (time/# transactions < 20)
+bots = df_periodico$X[(diff/lengths(split[1:nrow(df_periodico)])) <= 20]
+length(bots)
+#We will remove bots from dataset
+df_periodico = df_periodico[-bots,];
+#The new number of rows is the following:
+nrow(df_periodico)
+######################################################################
+#Now we will start with the items from homework
+#1) Modify order in the transactions
+items = substring(unlist(split), 5)
+items = as.numeric(items)
+articles = items%%9
+class = (items%/%9) + 1
+class = class[articles == 0] - 1
+class
+classes = c("deportes", "politica", "variedades", "internacional",
+            "nacionales", "sucesos", "comunidad", "negocios", "opinion")
