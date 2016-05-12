@@ -1,5 +1,6 @@
 #Changing the work space
-setwd("C:/Users/deyban.perez/Documents/Repos/Recomendacion/Script")
+setwd("C:/Users/deyban.perez/Documents/Repos/Recomendacion/Source")
+source(file = "C:/Users/deyban.perez/Documents/Repos/Recomendacion/Source/functions.R")
 #Reading datasets
 df_ejemplo = read.csv("../ejemplo.csv", sep = ",")
 df_periodico = read.csv("../periodico.csv", sep = ",")
@@ -23,10 +24,10 @@ nrow(df_periodico)
 ######################################################################
 #Now we will start with the items from homework
 #1) Modify order in the transactions
-items = substring(unlist(split), 5)
-items = as.numeric(items)
-articles = items%%9
-class = (items%/%9) + 1
+items = lapply(split, subString)
+items = lapply(items, changeType)
+articles = lapply(items, assignItems)
+classes = 
 class = class[articles == 0] - 1
 class
 classes = c("deportes", "politica", "variedades", "internacional",
