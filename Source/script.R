@@ -1,8 +1,11 @@
 #Changing the work space
 setwd("C:/Users/deyban.perez/Documents/Repos/Recomendacion")
 source(file = "Source/functions.R")#Reading datasets
-df_ejemplo = read.csv("../ejemplo.csv", sep = ",")
-df_periodico = read.csv("../periodico.csv", sep = ",")
+install("arules")
+install("arulesViz")
+
+df_ejemplo = read.csv("ejemplo.csv", sep = ",")
+df_periodico = read.csv("periodico.csv", sep = ",")
 #Here we will start with the logic to detect bots
 #Transfor time into POSIX format
 entry = as.POSIXct(df_periodico$entry, format = "%Y-%m-%d %H:%M:%S")
@@ -42,3 +45,32 @@ shortest_visit
 ##############################################################################
 #ALgoritmo para las curvas ROC
 ##############################################################################
+Class = c("p","p","n","p","p","p","n","n","p","n",
+          "p","n","p","n","n","n","p","n","p","n")
+
+Score = c("0.9","0.8","0.7","0.6","0.55","0.55","0.55","0.52","0.51","0.505",
+          "0.4","0.39","0.38","0.37","0.36","0.35","0.34","0.33","0.30","0.1")
+Score = as.numeric(Score)
+
+Target = "p"
+
+returnTP = vector(mode = "numeric", length = length(Score))
+returnFP = vector(mode = "numeric", length = length(scores))
+
+generate_ROC(Score, Class, "p")
+
+df_1 = read.csv("roc_1.csv.txt", sep = ",")
+generate_ROC(df_1$SCORE, df_1$CLASS, "p")
+
+
+y = c(2, 2, 1, 2, 2, 2, 2, 1, 2, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1)
+scores = c(0.9, 0.8, 0.7, 0.6, 0.55, 0.54, 0.53, 0.52, 0.5, 0.5, 0.5, 0.5, 0.38, 0.37, 0.36, 0.35, 0.34, 0.33, 0.30, 0.1)
+target = 2
+
+generate_ROC(scores, y, 2)
+
+
+
+
+
+
