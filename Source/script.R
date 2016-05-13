@@ -1,13 +1,17 @@
 #Changing the work space
 setwd("C:/Users/deyban.perez/Documents/Repos/Recomendacion")
-source(file = "Source/functions.R")#Reading datasets
+source(file = "functions.R")#Reading datasets
 install("arules")
 install("arulesViz")
 
 df_ejemplo = read.csv("ejemplo.csv", sep = ",")
-df_periodico = read.csv("periodico.csv", sep = ",")
+df_periodico = read.csv("../Data/periodico.csv", sep = ",")
 #Here we will start with the logic to detect bots
 #Transfor time into POSIX format
+nrow(df_periodico)
+
+
+
 entry = as.POSIXct(df_periodico$entry, format = "%Y-%m-%d %H:%M:%S")
 exit = as.POSIXct(df_periodico$exit, format = "%Y-%m-%d %H:%M:%S")
 #Substract time exit minus entry
@@ -17,7 +21,7 @@ df_periodico$articles = as.character(df_periodico$articles)
 split = substring(df_periodico$articles, 2)
 split = strsplit(x = split, split = ",|}")
 #Now we recognize a bot if (time/# transactions < 20)
-bots = df_periodico$X[(diff/lengths(split[1:nrow(df_periodico)])) <= 20]
+bots = df_periodico$X[(diff/lengths(split[])) <= 20]
 length(bots)
 #We will remove bots from dataset
 df_periodico = df_periodico[-bots,];
@@ -37,11 +41,11 @@ list = lapply(articles,strsplit, split = ",")
 list = lapply(list, unlist)
 transactions = as(list, "transactions")
 sort(itemFrequency(transactions, type = "absolute"), decreasing = TRUE)[1:10]
+
 diff = diff[-bots]
-shortest_visit = df_periodico[order(diff),c(2, 6)][1:10,2]
+shortest_visit = as.character(df_periodico$ID[order(diff)][1:10])
 highest_visit = df_periodico[order(diff, decreasing = TRUE),c(2, 6)][1:10,2]
-highest_visit
-shortest_visit
+
 ##############################################################################
 #ALgoritmo para las curvas ROC
 ##############################################################################
