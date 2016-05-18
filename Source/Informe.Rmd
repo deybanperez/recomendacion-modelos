@@ -47,7 +47,7 @@ install = function(pkg)
   if (!require(pkg, character.only = TRUE))
   {
     install.packages(pkg)
-    if (!require(pkg, character.only = TRUE, respos = "http://cran.rstudio.com/"))
+    if (!require(pkg, character.only = TRUE))
       stop(paste("load failure:", pkg))
   }
 }
@@ -92,7 +92,7 @@ changeFormat = function(element)
 }
 ```
 
-5. Función que aplica ka función **changeFormat** a todos los elementos de la lista de transacciones y luego los agrupa con una "," como deparador.
+5. Función que aplica la función **changeFormat** a todos los elementos de la lista de transacciones y luego los agrupa con una "," como deparador.
 
 ```{r convertFormat}
 convertFormat = function(element)
@@ -116,13 +116,148 @@ convertFormat = function(element)
 }
 ```
 
+6. Función que que retorna sólo la clase dado el númeor de un item
+
+```{r}
+changeFormatAux = function(element)
+{
+  classes = c("deportes", "politica", "variedades", "internacional",
+              "nacionales", "sucesos", "comunidad", "negocios", "opinion")
+  
+  article = element%%9; 
+  class = element%/%9 + 1;
+  
+  if(article == 0)
+  {
+    article = 9;
+    class = class-1;
+  }
+  
+  return(classes[class])
+}
+```
+
+7. Función que retorna los items únicos de una transacción donde sólo están presente las clases.
+
+```{r}
+convertFormatAux = function(element)
+{
+  items = as.integer(element)
+  newItems = changeFormatAux(items[1])
+  aux = vector(mode = "character")
+  
+  if(length(items) == 1)
+  {
+    return(newItems)
+    
+  }else
+  {
+    aux[1] = newItems
+    
+    for(i in 2:length(items))
+    {
+      aux[i] = changeFormatAux(items[i])
+    }
+    
+    aux = unique(aux)
+    
+    return(as.character(aux))
+  }
+}
+```
+
+8. Función que toma los items únicos por clases de las transacciones y los ensambla de la forma: **claseX, claseY, ..., claseZ**.
+
+```{r}
+union = function(element)
+{
+  newItem = element[1]
+  
+  if(length(element) == 1)
+  {
+    return(element)
+  }else
+  {
+    for(i in 2:length(element))
+    {
+      newItem = paste(newItem, ",", element[i], sep = "")
+      
+    }
+    return(newItem)
+  }
+}
+```
+
+9. Función que remueve el postfijo **articuloX** de un elemento de una transacción.
+
+```{r}
+removeArticle = function(element)
+{
+  returnValue = vector(mode = "character")
+  
+  for (i in 1:length(element))
+  {
+    aux = substr(element[i],1,1)
+    
+    if(aux == "d")
+    {
+      returnValue[i] = "deportes"
+    
+    }else if(aux == "p")
+    {
+      returnValue[i] = "politica"
+    
+    }else if(aux == "v")
+    {
+      returnValue[i] = "variedades"
+      
+    }else if(aux == "i")
+    {
+      returnValue[i] = "internacional"
+      
+    }else if(aux == "n")
+    {
+      returnValue[i] = "nacionales"
+      
+    }else if(aux == "s")
+    {
+      returnValue[i] = "sucesos"
+      
+    }else if(aux == "c")
+    {
+      returnValue[i] = "comunidad"
+      
+    }else if(aux == "n")
+    {
+      returnValue[i] = "negocios"
+      
+    }else if(aux == "o")
+    {
+      returnValue[i] = "opinion"
+      
+    }
+  }
+  
+  return(returnValue)
+}
+```
+
 ##Instalando los Paquetes Necesarios
 
-Cómo implementaremos reglas de asociación, utilizaremos el algoritmo **apriori** de la biblioteca **arules** y adicionalmente utilizaremos la biblioteca **arulesViz** para poder generar gráficos.
+Cómo implementaremos reglas de asociación, utilizaremos el algoritmo **apriori** de la biblioteca **arules** y adicionalmente utilizaremos la biblioteca **arulesViz** para poder generar gráficos, adicionalmente para poder clusterizar usaremos la biblioetca **flexclust**.
+
+```{r, eval=FALSE}
+install("arules")
+install("arulesViz")
+install("flexclust")
+```
+
+Ahora cargamos los paquetes
 
 ```{r installing packages, message=FALSE}
 library("arules")
 library("arulesViz")
+library("flexclust")
 ```
 
 ##Periódico
@@ -249,6 +384,140 @@ Y vamos a guardar ese dataset con el nuevo nombre **periodico_arreglado.csv**.
 write.csv(x = df_periodico, file = "../Data/periodico_arreglado.csv", row.names = FALSE)
 ```
 
+
+### Generando las Transacciones
+
+A partir de acá necesitamos crear las matrices de transacciones pertinentes para poder realizar los pŕoximos items de las preguntas.
+
+Empecemos:
+
+Primero vamos a también convertir las transacciones en la forma **claseX,claseY,...,claseZ**
+
+```{r}
+articlesAux = lapply(articles, convertFormatAux)
+articlesAux = lapply(articlesAux, union)
+```
+
+Ahora también tenemos los items ordenados de la siguiente forma:
+
+```{r}
+articlesAux[1]
+```
+
+Ahora vamos a generar las matrices de transacciones de la forma con y sin artículos
+
+####Con Artículos
+
+```{r}
+list = lapply(df_periodico$articles,strsplit, split = ",")
+list = lapply(list, unlist)
+transactions = as(list, "transactions")
+```
+
+####Sin Artículos
+
+```{r}
+listAux = lapply(articlesAux,strsplit, split = ",")
+listAux = lapply(listAux, unlist)
+transactionsAux = as(listAux, "transactions")
+```
+
+###Clasificando a los Usuarios del Sistema
+
+Existen nueve (9) categorías, acá lo que nos interesa es ver que tipo se sección ven los diferentes usuarios, no nos interesa el artículo en específico, para eso utilizaremos la modalidad de las transacciones donde sólo salen las clases. y no sólo eso además sólo utilizaremos las transacciones únicas.
+
+```{r}
+uniqueTransactions = unique(listAux)
+uniqueTransactions = as(uniqueTransactions, "transactions")
+uniqueTransactions = as(uniqueTransactions, "matrix")
+```
+
+Ahora si bien vemos las dimensiones de la matriz nos damos cuenta de que hay:
+
+```{r}
+dim(uniqueTransactions)
+```
+
+**425 filas** de **512**, esto es debido a $2^9$ es igual a *512* y **9 columnas** que correesponden a las diferentes secciones.
+
+Ahora bien para clusterizar se usará **Kmeans** con el paquete **flexclust** y con el algoritmo de **distancia** que saca la distancia entre conjuntos que es exactamente lo que tenemos acá.
+
+```{r, fig.align="center", fig.height=10}
+set.seed(22)
+model = kcca(uniqueTransactions, k=8 ,family = kccaFamily("jaccard"))
+barplot(model)
+```
+
+En este gráfico podemos ver cómo se dividen con respecto a las secciones que ven y al porcentaje que estos representan dentro del conjunto total de las transacciones.
+
+###Recomendando un Nuevo Artículo
+
+Ahora recomendaremos un nuevo artículo a un nuevo usuario, para ello aplicaremos el algorito **apriori** para las dos transacciones generadas previamente.
+
+####Con Artículos
+
+```{r}
+rules1 = apriori(transactions,
+                 parameter = list(supp = 0.00004, conf = 0.7, target = "rules"))
+```
+Acá tenemos las reglas generadas con uno *soporte mínim*o de *0.00004*, lo que corresponde a aproximadamente *6 ocurrencia*s de la regla y una *confianza mínima* de *0.7*, esto debido a que queremos reglas con un soporte relativamente pequeño y confianza alta.
+ 
+Ahora bien podemos ver las reglas generadas haciendo uso del comando:
+
+```{r, eval=FALSE}
+inspect(rules1)
+```
+
+####Sin Artículos
+
+```{r}
+rules2 = apriori(transactionsAux,
+                 parameter = list(supp = 0.00002, conf = 0.4, target = "rules"))
+```
+
+Acá elegimos un soporte una menor confianza debido a que que este fue el número que provee un conjunto considerable de reglas y que tienen sentido debido a que ahora las dimensiones del conjunto se redujo considerablemente de 81 columnas a 9.
+
+Podemos revisar las reglas generadad haciendo uso del comando:
+
+```{r, eval=FALSE}
+inspect(rules2)
+```
+
+Una vez que tenemos esto, el enfoque es el siguente:
+
+Tenemos dos niveles de recomendación, uno **con artículos** donde se procesa la transacción de la forma tradicional **clase/articulo** y otro nivel donde se procesa la transacción de la forma **clase**, la idea es que si no se consigue una regla para la forma específica con artículo, entonces pasa al segundo nivel donde enntonces recomendará por sección exclusivamente.
+
+```{r}
+recomendation = function(a)
+{
+  a2 = unlist(lapply(a, removeArticle))
+  a2 = unique(a2)
+  
+  if(length(subset(rules1, lhs %ain% a)) != 0)
+  {
+    return(inspect(rhs(subset(rules1, lhs %ain% a)[1])))
+  }else if(length(subset(rules2, lhs %ain% a2)) != 0)
+  {
+    return(inspect(rhs(subset(rules2, lhs %ain% a2)[1])))
+  }
+}
+```
+
+
+Si tenemos una nueva transacción del tipo:
+
+```{r}
+a = c("deportes/articulo1", "deportes/articulo8")
+```
+
+Entonces le aplicamos la función **recomendation**
+
+```{r}
+recomendation(a)
+```
+
+Y esto nos da la regla de la forma específica o global por clases, se invita a revisar el archivo **script.r** que está en el directorio **Source** para crear nuevas transacciones y probar.
+
 ### Visitas con Mayor y Menor Duración
 
 Basándonos en nuestra variable **diff** que contiene la resta de todos los tiempos de entrada y de salida, le quitamos las entradas bots:
@@ -274,18 +543,10 @@ as.character(df_periodico$ID[order(diff, decreasing = TRUE)][1:10])
 
 ### Transacciones con Mayor Número de Apariciones
 
-Para esto, debemos agarrar nuestra columna **articles** de nuestro dataframe **periodico.csv** y crear una matriz de transacciones.
-
-```{r}
-list = lapply(df_periodico$articles,strsplit, split = ",")
-list = lapply(list, unlist)
-transactions = as(list, "transactions")
-```
-
 Ahora bien podemos ver la cantidad de ocurrencias de cada transacción y ordenarla para ver las 10 transacciones más frecuentes:
 
 ```{r}
-sort(itemFrequency(transactions, type = "absolute"), decreasing = TRUE)[1:10]
+itemFrequencyPlot(transactions, topN = 10, type = "absolute", col = heat.colors(10))
 ```
 
 ###Generador de Curvas ROC
@@ -344,8 +605,9 @@ Esta toma en cuenta los casos simples de sólo 2 clases y los casos de más de d
 
 ```{r, fig.align = "center"}
 y = c(2, 2, 1, 2, 2, 2, 2, 1, 2, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1)
-scores = c(0.9, 0.8, 0.7, 0.6, 0.55, 0.54, 0.53, 0.52, 0.5, 0.5, 0.5, 0.5, 0.38, 0.37, 0.36, 0.35, 0.34, 0.33, 0.30, 0.1)
+scores = c(0.9, 0.8, 0.7, 0.6, 0.55, 0.54, 0.53, 0.52, 0.5, 0.5,
+           0.5, 0.5, 0.38, 0.37, 0.36, 0.35, 0.34, 0.33, 0.30, 0.1)
 target = 2
-generate_ROC(scores, y, 2)
+generate_ROC(scores, y, target)
 ```
 
