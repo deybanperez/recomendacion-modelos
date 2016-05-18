@@ -1,17 +1,17 @@
-#Changing the work space
+#Setting the work Directory
 setwd("C:/Users/deyban.perez/Documents/Repos/Recomendacion")
-source(file = "functions.R")#Reading datasets
+#Loading functions
+source(file = "Source/functions.R")
+#Installing packages
 install("arules")
 install("arulesViz")
-
-df_ejemplo = read.csv("ejemplo.csv", sep = ",")
-df_periodico = read.csv("../Data/periodico.csv", sep = ",")
-#Here we will start with the logic to detect bots
-#Transfor time into POSIX format
+#Loading Dataset
+df_periodico = read.csv("Data/periodico.csv", sep = ",")
 nrow(df_periodico)
-
-
-
+################
+#Detecting Bots#
+################
+#Transfor time into POSIX format
 entry = as.POSIXct(df_periodico$entry, format = "%Y-%m-%d %H:%M:%S")
 exit = as.POSIXct(df_periodico$exit, format = "%Y-%m-%d %H:%M:%S")
 #Substract time exit minus entry
@@ -27,27 +27,73 @@ length(bots)
 df_periodico = df_periodico[-bots,];
 #The new number of rows is the following:
 nrow(df_periodico)
-######################################################################
-#Now we will start with the items from homework
-#1) Modify order in the transactions
+###################################
+#Making some operations on Dataset#
+###################################
+#1) Modify Order in transactions 
 colnames(df_periodico)[5] = "items"
 split = split[-bots]
 articles = lapply(split, subString)
 df_periodico$articles = lapply(articles, convertFormat)
-#3)
-articles = df_periodico$articles
-class(articles[[1]])
-list = lapply(articles,strsplit, split = ",")
+#######################################################
+#Auxiliar way
+articlesAux = lapply(articles, convertFormatAux)
+articlesAux = lapply(articlesAux, union)
+#######################################################
+#Generating the transaction matrix
+list = lapply(df_periodico$articles,strsplit, split = ",")
 list = lapply(list, unlist)
 transactions = as(list, "transactions")
-sort(itemFrequency(transactions, type = "absolute"), decreasing = TRUE)[1:10]
+#########################################################
+#Auxiliar Transactions
+listAux = lapply(articlesAux,strsplit, split = ",")
+listAux = lapply(listAux, unlist)
+transactionsAux = as(listAux, "transactions")
+########################################################
+#2 Clusters
 
+uniqueTransactions = unique(listAux)
+
+model = kcca(uniqueTransactions, k=8 ,family = kccaFamily("kmeans"))
+
+########################################################
+#3) Recomendations
+rules1 = apriori(transactions,
+                 parameter = list(supp = 0.00004, conf = 0.7, target = "rules"))
+
+inspect(rules1)
+
+rules2 = apriori(transactionsAux,
+                 parameter = list(supp = 0.00002, conf = 0.4, target = "rules"))
+
+inspect(rules2)
+
+a = c("politica/articulo2", "variedades/articulo7", "politica/articulo8", "comunidad/articulo4")
+
+a2 = unlist(lapply(a, removeArticle))
+a2 = unique(a2)
+
+recomendation = inspect(rhs(subset(rules1, lhs %in% a)[1]))
+if(length(recomendation) != 0)
+{
+  recomendation
+}else
+{
+  recomendation = inspect(rhs(subset(rules2, lhs %in% a2)[1]))
+}
+
+
+
+########################################################
+#4) Top 10 longest and shortest visits
 diff = diff[-bots]
 shortest_visit = as.character(df_periodico$ID[order(diff)][1:10])
 highest_visit = df_periodico[order(diff, decreasing = TRUE),c(2, 6)][1:10,2]
-
+########################################################
+#5) Top 10 Transactions
+itemFrequencyPlot(transactions, topN = 10, type = "absolute", col = heat.colors(10))
 ##############################################################################
-#ALgoritmo para las curvas ROC
+#Prueba para Curvas ROC
 ##############################################################################
 Class = c("p","p","n","p","p","p","n","n","p","n",
           "p","n","p","n","n","n","p","n","p","n")

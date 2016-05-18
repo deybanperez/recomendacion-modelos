@@ -38,6 +38,23 @@ changeFormat = function(element)
   return(paste(classes[class], "/", "articulo",article, sep = ""))
 }
 
+changeFormatAux = function(element)
+{
+  classes = c("deportes", "politica", "variedades", "internacional",
+              "nacionales", "sucesos", "comunidad", "negocios", "opinion")
+  
+  article = element%%9; 
+  class = element%/%9 + 1;
+  
+  if(article == 0)
+  {
+    article = 9;
+    class = class-1;
+  }
+  
+  return(classes[class])
+}
+
 convertFormat = function(element)
 {
   items = as.integer(element)
@@ -57,6 +74,103 @@ convertFormat = function(element)
     return(newItems)
   }
 }
+
+convertFormatAux = function(element)
+{
+  items = as.integer(element)
+  newItems = changeFormatAux(items[1])
+  aux = vector(mode = "character")
+  
+  if(length(items) == 1)
+  {
+    return(newItems)
+    
+  }else
+  {
+    aux[1] = newItems
+    
+    for(i in 2:length(items))
+    {
+      aux[i] = changeFormatAux(items[i])
+    }
+    
+    aux = unique(aux)
+    
+    return(as.character(aux))
+  }
+}
+
+union = function(element)
+{
+  newItem = element[1]
+  
+  if(length(element) == 1)
+  {
+    return(element)
+  }else
+  {
+    for(i in 2:length(element))
+    {
+      newItem = paste(newItem, ",", element[i], sep = "")
+      
+    }
+    return(newItem)
+  }
+}
+
+removeArticle = function(element)
+{
+  returnValue = vector(mode = "character")
+  
+  for (i in 1:length(element))
+  {
+    aux = substr(element[i],1,1)
+    
+    if(aux == "d")
+    {
+      returnValue[i] = "deportes"
+    
+    }else if(aux == "p")
+    {
+      returnValue[i] = "politica"
+    
+    }else if(aux == "v")
+    {
+      returnValue[i] = "variedades"
+      
+    }else if(aux == "i")
+    {
+      returnValue[i] = "internacional"
+      
+    }else if(aux == "n")
+    {
+      returnValue[i] = "nacionales"
+      
+    }else if(aux == "s")
+    {
+      returnValue[i] = "sucesos"
+      
+    }else if(aux == "c")
+    {
+      returnValue[i] = "comunidad"
+      
+    }else if(aux == "n")
+    {
+      returnValue[i] = "negocios"
+      
+    }else if(aux == "o")
+    {
+      returnValue[i] = "opinion"
+      
+    }
+  }
+  
+  return(returnValue)
+}
+
+
+
+
 
 generate_ROC = function(scores, real, target)
 {
