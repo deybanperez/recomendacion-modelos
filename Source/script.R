@@ -5,6 +5,11 @@ source(file = "Source/functions.R")
 #Installing packages
 install("arules")
 install("arulesViz")
+install("flexclust")
+
+library("arules")
+library("arulesViz")
+library("flexclust")
 #Loading Dataset
 df_periodico = read.csv("Data/periodico.csv", sep = ",")
 nrow(df_periodico)
@@ -53,8 +58,13 @@ transactionsAux = as(listAux, "transactions")
 #2 Clusters
 
 uniqueTransactions = unique(listAux)
+uniqueTransactions = as(uniqueTransactions, "transactions")
+uniqueTransactions = as(uniqueTransactions, "matrix")
+#uniqueTransactions[uniqueTransactions[,] == TRUE] = 1
+#uniqueTransactions[uniqueTransactions[,] == FALSE] = 0
 
 model = kcca(uniqueTransactions, k=8 ,family = kccaFamily("kmeans"))
+barplot(model)
 
 ########################################################
 #3) Recomendations
@@ -68,22 +78,8 @@ rules2 = apriori(transactionsAux,
 
 inspect(rules2)
 
-a = c("politica/articulo2", "variedades/articulo7", "politica/articulo8", "comunidad/articulo4")
-
-a2 = unlist(lapply(a, removeArticle))
-a2 = unique(a2)
-
-recomendation = inspect(rhs(subset(rules1, lhs %in% a)[1]))
-if(length(recomendation) != 0)
-{
-  recomendation
-}else
-{
-  recomendation = inspect(rhs(subset(rules2, lhs %in% a2)[1]))
-}
-
-
-
+a = c("deportes/articulo1", "deportes/articulo8")
+recomendation(a)
 ########################################################
 #4) Top 10 longest and shortest visits
 diff = diff[-bots]

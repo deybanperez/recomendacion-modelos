@@ -169,6 +169,21 @@ removeArticle = function(element)
 }
 
 
+recomendation = function(a)
+{
+  a2 = unlist(lapply(a, removeArticle))
+  a2 = unique(a2)
+  
+  if(length(subset(rules1, lhs %ain% a)) != 0)
+  {
+    return(inspect(rhs(subset(rules1, lhs %ain% a)[1])))
+  }else if(length(subset(rules2, lhs %ain% a2)) != 0)
+  {
+    return(inspect(rhs(subset(rules2, lhs %ain% a2)[1])))
+  }
+}
+
+
 
 
 
