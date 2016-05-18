@@ -60,10 +60,8 @@ transactionsAux = as(listAux, "transactions")
 uniqueTransactions = unique(listAux)
 uniqueTransactions = as(uniqueTransactions, "transactions")
 uniqueTransactions = as(uniqueTransactions, "matrix")
-#uniqueTransactions[uniqueTransactions[,] == TRUE] = 1
-#uniqueTransactions[uniqueTransactions[,] == FALSE] = 0
-
-model = kcca(uniqueTransactions, k=8 ,family = kccaFamily("kmeans"))
+set.seed(22)
+model = kcca(uniqueTransactions, k = 8 ,family = kccaFamily("jaccard"))
 barplot(model)
 
 ########################################################
