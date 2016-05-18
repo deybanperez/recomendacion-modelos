@@ -1,7 +1,27 @@
-## Tarea #4: Sistema de recomendaciÃ³n y evaluaciÃ³n de modelos
+#Sistemas de Recomendación y Curvas ROC
+Tarea #4 del Curso de Minería de Datos de la Universidad Central de Venezuela.
+##Ambiente de Desarrollo
+Se utilizó el lenguaje de programación [R](https://www.r-project.org/) en conjunto con el IDE [RStudio](https://www.rstudio.com/) en el sistema operativo [Ubuntu 14.04](http://www.ubuntu.com/).
 
-### Paper ROC 
-Una introducciÃ³n al anÃ¡lisis de curvas ROC. Tomar en cuenta solamente las primeras 5 secciones.
+## Configuraciones de Portabilidad
 
-### Archivos csv
-Referentes a la primer parte de la tarea sobre el sistema de recomendaciÃ³n.
+Para asegurar la portabilidad y correcta ejecución de los scripts realizados se deben instalar los siguientes paquetes, dentro de la consola de **R**:
+
+* install("arules")
+* install("arulesViz")
+* install("flexclust")
+
+Estos paquete son los necesarios para poder correr los script sin problemas
+
+##Estructura del Repositorio
+
+Existen tres (3) directorios:
+
+* **Data**: se encuentras los archivos **".csv"**.
+
+* **PDF**: seencuentras los documentos de texto, entre ellos el informe de las actividades realizads.
+
+* **Source**: se encuentra el código fuente del proyecto, el archivo principal es **script.r** que hace uso de **functions.r**, también se encuentra el **.Rmd** que genera el PDF para el informe.
+
+**IMPORTANTE**: Cambiar el espacio del trabajo al directorio donde se clonó el repositorio.
+
